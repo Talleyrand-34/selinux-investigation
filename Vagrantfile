@@ -49,8 +49,17 @@ Vagrant.configure("2") do |config|
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
-  # QEMU/KVM configuration
-  config.vm.provider "libvirt" do |lv|
+    # config.ssh.username = "vagrant"
+    # config.ssh.password = "test"
+    # config.ssh.private_key_path = "~/.ssh/dd-wrt"
+    # config.ssh.insert_key = true # QEMU/KVM configuration
+    # config.ssh.username = "vagrant"
+    # config.ssh.port = 22
+    # config.ssh.insert_key = true
+    # config.ssh.private_key_path =  "~/.ssh/dd-wrt"
+    config.ssh.insert_key=false
+
+    config.vm.provider "libvirt" do |lv|
     lv.memory = "4098"
     lv.cpus = 2
     lv.graphics_type = "spice"
@@ -77,11 +86,13 @@ Vagrant.configure("2") do |config|
   # end
   config.vm.provision "ansible" do |ansible|
     ansible.verbose = "v"
-    ansible.playbook = "selinux.yml"
+    # ansible.playbook = "selinux.yml"
+    ansible.playbook = "ansible/main-ansible.yml"
   end
   #
   # View the documentation for the provider you are using for more
   # information on available options.
+  config.vm.synced_folder ".", "/home/vagrant/project", type: "rsync"
 
   # Enable provisioning with a shell script. Additional provisioners such as
   # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the

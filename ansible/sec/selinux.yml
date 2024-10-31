@@ -1,0 +1,30 @@
+---
+- name: Manage Vagrant User and SELinux Context
+  hosts: all,localhost
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Install Selinux utils
+      ansible.builtin.dnf:
+        name:
+          - policycoreutils-python-utils
+          - setools-console
+        state: present
+
+    # - name: Add SELinux login mapping for vagrant user
+    #   ansible.builtin.command:
+    #     cmd: semanage login -a -s user_u vagrant
+    #   register: semanage_login_result
+    #   failed_when: semanage_login_result.rc not in [0, 1]
+    #   changed_when: semanage_login_result.rc == 0
+    #
+    # - name: Add SELinux file context for vagrant home directory
+    #   ansible.builtin.command:
+    #     cmd: semanage fcontext -a -t user_home_dir_t "/home/vagrant(/.*)?"
+    #   register: semanage_fcontext_result
+    #   failed_when: semanage_fcontext_result.rc not in [0, 1]
+    #   changed_when: semanage_fcontext_result.rc == 0
+    #
+    # - name: Restore SELinux context on vagrant home directory
+    #   ansible.builtin.command:
+    #     cmd: restorecon -R -v /home/vagrant

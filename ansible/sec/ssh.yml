@@ -1,0 +1,26 @@
+---
+- name: Manage Vagrant User and SELinux Context
+  hosts: all,localhost
+  become: yes
+  gather_facts: 
+  tasks:
+  - name: Allow SSH access for vagrant user
+    ansible.builtin.command:
+      cmd: semanage port -a -t ssh_port_t -p tcp 22
+    register: semanage_port_result
+    failed_when: semanage_port_result.rc not in [0, 1]
+    changed_when: semanage_port_result.rc == 0
+
+  - name: Allow unrestricted SSH access for vagrant user
+    ansible.builtin.command:
+      cmd: setsebool -P allow_ssh_vagrant_user on
+    register: setsebool_result
+    failed_when: setsebool_result.rc not in [0, 1]
+    changed_when: setsebool_result.rc == 0
+
+  - name: Ensure SSH access is allowed for the vagrant user
+    ansible.builtin.command:
+      cmd: setsebool -P ssh_use_nfs=1
+    register: ssh_use_nfs_result
+    failed_when: ssh_use_nfs_result.rc not in [0, 1]
+    changed_when: ssh_use_nfs_result.rc == 0
