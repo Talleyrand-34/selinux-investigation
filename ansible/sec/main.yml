@@ -1,6 +1,7 @@
 ---
-- import_playbook: selinux.yml
-- import_playbook: cockpit.yml
+- import_playbook: setup/selinux-utils.yml
+- import_playbook: setup/cockpit.yml
+- import_playbook: users/user-alice.yml
 # - import_playbook: ssh.yml
 # - import_playbook: user-alice.yml
 # - import_playbook: selinux.yml

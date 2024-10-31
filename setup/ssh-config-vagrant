@@ -21,9 +21,9 @@ Host sasada
   IdentitiesOnly yes
   LogLevel FATAL
 
-Host user1
+Host alice
   HostName 192.168.121.105
-  User user1
+  User alice
   Port 22
   UserKnownHostsFile /dev/null
   StrictHostKeyChecking no

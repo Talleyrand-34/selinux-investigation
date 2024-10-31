@@ -3,15 +3,15 @@
   hosts: all,localhost
   become: yes  # This ensures the tasks run with root privileges
   tasks:
-    - name: Search for Cockpit packages
-      ansible.builtin.command:
-        cmd: dnf search cockpit
-      register: cockpit_search
-      changed_when: false  # This command doesn't change the system state
+    # - name: Search for Cockpit packages
+    #   ansible.builtin.command:
+    #     cmd: dnf search cockpit
+    #   register: cockpit_search
+    #   changed_when: false  # This command doesn't change the system state
 
-    - name: Display Cockpit search results
-      ansible.builtin.debug:
-        var: cockpit_search.stdout_lines
+    # - name: Display Cockpit search results
+    #   ansible.builtin.debug:
+    #     var: cockpit_search.stdout_lines
 
     - name: Install Cockpit and Cockpit SELinux module
       ansible.builtin.dnf:

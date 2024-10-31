@@ -4,7 +4,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Set the output file path
 vagrant_file="$SCRIPT_DIR/ssh-config-vagrant"
 # List of additional users
-users=(sasada user1 user2)
+users=(sasada alice user2)
 # vagrant_file=ssh-config-vagrant
 # Get Vagrant SSH config
 vagrant ssh-config > $vagrant_file

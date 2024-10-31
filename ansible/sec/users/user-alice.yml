@@ -1,14 +1,19 @@
 ---
-- name: Manage Vagrant User and SELinux Context
+- name: Setup Alice User
   hosts: all
   become: yes
-  gather_facts: no
   vars:
     ansible_password: $6$xOpWRIeHhJJgiOFX$80Fbjj80ERdC4XAXQdl8o/uGZ9rk8wJv6v9u.DI7qeiEnlKLT7GpJMxQbaLVh3MMgj.l.Hjgoj2kn0F4v0hyP1
+
   tasks:
-    - name: Ensure vagrant user exists
+    - name: Ensure alice user exists
       ansible.builtin.user:
         name: alice
         state: present
         createhome: yes
         password: "{{ ansible_password }}"
+      when: ansible_password is defined
+  roles:
+    - role: manage_ssh  # Include the manage_ssh role here.
+      vars:
+        user: alice  # Pass the username to the role.       target_host: "{{ inventory_hostname }}"
