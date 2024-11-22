@@ -1,5 +1,5 @@
 Host default
-  HostName 192.168.121.105
+  HostName 192.168.121.218
   User vagrant
   Port 22
   UserKnownHostsFile /dev/null
@@ -11,7 +11,7 @@ Host default
 
 
 Host sasada
-  HostName 192.168.121.105
+  HostName 192.168.121.218
   User sasada
   Port 22
   UserKnownHostsFile /dev/null
@@ -22,7 +22,7 @@ Host sasada
   LogLevel FATAL
 
 Host alice
-  HostName 192.168.121.105
+  HostName 192.168.121.218
   User alice
   Port 22
   UserKnownHostsFile /dev/null
@@ -33,7 +33,7 @@ Host alice
   LogLevel FATAL
 
 Host user2
-  HostName 192.168.121.105
+  HostName 192.168.121.218
   User user2
   Port 22
   UserKnownHostsFile /dev/null
