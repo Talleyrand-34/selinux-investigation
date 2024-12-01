@@ -6,17 +6,21 @@
 // TODO Anadir descripciones
 #let entry-list = (
   (key: "SEL", short: "SElinux", long: "Security Enhanced Linux"), (
-    key: "CIL", short: "CIL", long: "Common Intermediate Language", //description: "",,,,,,,,,,,,,,
+    key: "CIL", short: "CIL", long: "Common Intermediate Language", //description: "",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
   ), (
-    key: "DAC", short: "DAC", long: "Discretionary Access Control", //description: "A university in Belgium.",,,,,,,,,,,,,,
+    key: "DAC", short: "DAC", long: "Discretionary Access Control", //description: "A university in Belgium.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
   ), (
-    key: "MAC", short: "MAC", long: "Mandatory Access Control", //description: "A university in Belgium.",,,,,,,,,,,,,,
+    key: "MAC", short: "MAC", long: "Mandatory Access Control", //description: "A university in Belgium.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
   ), (
-    key: "LSM", short: "LSM", long: "Linux Security Modules", description: "Tambien conocido pero desactualizado MCS o Multilevel Category Security",
+    key: "LSM", short: "LSM", long: "Linux Security Modules", description: "Es un marco que proporciona ganchos dentro del kernel de Linux en varios lugares, incluyendo los puntos de entrada de llamadas al sistema. Cuando estos \"hooks\" se activan, las implementaciones de seguridad registradas, como SELinux, ejecutan sus funciones automáticamente.",
   ), (
-    key: "Label", short: "Etiqueta", long: "Label o etiqueta", plural: "Etiquetas", //description: "A university in Belgium.",,,,,,,,,,,,,,
+    key: "Label", short: "Label", long: "Label o etiqueta", plural: "Etiquetas", //description: "A university in Belgium.",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
   ), (
-    key: "MLS", short: "MLS", long: "Multi-Level Security", //description: "A university in Belgium.",,,,,,,,,,,,,,
+    key: "MLS", short: "MLS", long: "Multi-Level Security", description: "Tambien conocido pero desactualizado MCS o Multilevel Category Security",
+  ), (
+    key: "event", short: "evento", description: "Accion en el sistema que accede o modifica un recurso o archivo (en linux todo es un archivo)",
+  ), (
+    key: "domain", short: "dominio", long: "Dominio o tipo", //description: "",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
   ),
   // Add more terms
 )
@@ -52,17 +56,8 @@ ni ignoradas por los usuarios regulares. Además, @SEL sigue una política de
 “denegación por defecto”, lo que significa que, en ausencia de una regla
 explícita para una acción, esta será denegada por defecto. Esto contrasta con el
 modelo @DAC, donde un acceso puede ser permitido si no se especifica lo
-contrario.
-
-//Esto puede que no debiera ir aqui si no mas adelante
-En SELinux, todos los objetos y procesos están etiquetados con un @Label que
-define detalladamente cómo pueden interactuar entre sí. Finalmente, @SEL también
-aísla los procesos en dominios, lo que impide que un proceso comprometido, como
-un servidor web, acceda a recursos fuera de su dominio designado. Por lo tanto,
-@SEL es capaz de mitigar la escalada de privilegios y reducir los riesgos en el
-sistema, al restringir las acciones que un atacante podría llevar a cabo,
-limitando su acceso a recursos y otras operaciones que podrían ser posibles en
-un sistema Unix estándar con @DAC en lugar del @MAC de @SEL.// Reescribir parcialmente, buena idea pero muchas vueltas
+contrario. Cabe recalcar que @SEL no sobreescribe los permisos del @DAC si no
+que los extiende.
 
 //= Historia
 
@@ -81,7 +76,9 @@ a los objetos: si un intruso obtiene el control de un proceso propiedad de un
 usuario, el acceso a todos los archivos propiedad de ese usuario no se otorga
 automáticamente. El tipo de acceso (lectura, escritura, creación) también puede
 ser controlado por @SEL. Para una descripcion mas grafica y simple se puede
-referencias a @Selinux-for-kids
+referencias a @Selinux-for-kids.
+
+// TODO Hablar del modelo del minimo privilegio
 
 //== Beneficios de Selinux
 
@@ -105,11 +102,82 @@ referencias a @Selinux-for-kids
   archivos de texto o comandos, transpila a @CIL@CIL-main-ref
 
 = Bases de SELinux
-Selinux tiene tres modos de operacion [Disabled,Permissive,Enforcing]
+@SEL tiene tres modos de operacion [Disabled,Permissive,Enforcing]
+- Disabled
+  - @SEL no interactua con el sistema
+- Permissive
+  - @SEL no bloque nada, en cambio solo notifica cuando un @event transgrede una
+    regla
+- Enforcing
+  - @SEL bloquea todas las acciones que no tengan politicas asociadas
 
+La existencia de estos tres modos se explica en el sentido de que cada uno
+existe para uno de tres escenarios.
+- Disabled: Cuando se quiere desactivar @SEL por completo.
+- Permissive: Cuando se quiere permitir el funcionamiento del sistema sin
+  bloquearlo para:
+  - Aprender el funcionamiento del sistema y refinar politicas
+  - Razones adicionales
+- Enforcing: Cuando las politicas estan listas para ser desplegadas
+== Herramientas de terminal auxiliares
+En una instalacion basica no vienen todos los paquetes necesarios para
+adminismtrar el sistema de forma comoda, por eso se recomienda
+
+#code(
+  lang: "bash", ```bash
+                                                                dnf install setools-console setools sepolicy_analysis policycoreutils python3-policycoreutils
+                                                                ```,
+)
 == Selinux Contexts
+El contexto en @SEL es una etiqueta que se asocia a cada archivo, proceso y
+recurso del sistema para definir sus permisos y roles de seguridad. Un contexto
+típico en SELinux se compone de tres elementos principales:
+- User (usuario): Define el usuario de seguridad de SELinux.
+- Role (rol): Define el rol de seguridad de SELinux.
+- Type (@domain): Define el tipo de seguridad de SELinux, que es el más importante
+  para la política de acceso.
+- Sensivity level (Nivel de sensibilidad):
+
+De todos estos el mas importante es el tercero, el @domain, porque la mayoria de
+las politicas trabajan sobre este valor.
+
+Todos los comandos basicos de visualizacion de atributos se pueden ver en
+@visualizacion-commandos
+
+Se puede acceder a los valoers de Selinux asociados a un proceso en
+/proc/\$PID/attr. Esta carpeta define los atributos asociados a un proceso.
+
+#image("figures/sshd.png")
+
+El significado de los archivos es el siguiente:
+- El archivo current muestra el contexto SELinux actual del proceso.
+- El archivo exec muestra el contexto SELinux que será asignado por la próxima
+  ejecución de la aplicación realizada a través de esta aplicación. Normalmente
+  está vacío.
+- El archivo fscreate muestra el contexto SELinux que será asignado al siguiente
+  archivo escrito por la aplicación.
+- El archivo keycreate muestra el contexto SELinux que será asignado a las claves
+  almacenadas en caché en el kernel por esta aplicación. Normalmente está vacío.
+- El archivo prev muestra el contexto SELinux previo para este proceso en
+  particular. Este normalmente es el contexto de su aplicación padre.
+- El fichero sockcreate muestra el contexto SELinux que será asignado al siguiente
+  socket creado por la aplicación. Normalmente está vacío.
 
 == Selinux Labels
+En SELinux, todos los objetos y procesos están etiquetados con un @Label, este
+representa el contexto y define detalladamente cómo pueden interactuar entre sí.
+Finalmente, @SEL también aísla los procesos en dominios, lo que impide que un
+proceso comprometido, como un servidor web, acceda a recursos fuera de su
+dominio designado. Por lo tanto, @SEL es capaz de mitigar la escalada de
+privilegios y reducir los riesgos en el sistema, al restringir las acciones que
+un atacante podría llevar a cabo, limitando su acceso a recursos y otras
+operaciones que podrían ser posibles en un sistema Unix estándar con @DAC en
+lugar del @MAC de @SEL.// Reescribir parcialmente, buena idea pero muchas vueltas
+
+Aqui estan listadas las #glspl("Label") mas comunes:
+#table(
+  columns: (auto, auto, 2fr), inset: 10pt, align: horizon, table.header([*Tipo de etiqueta*], [*Ruta*], [*Descripción*]), [unconfined_t], [/example], [Carpeta sin restricciones de SELinux], [user_home_t], [/home/user], [Carpeta home de usuario], [default_t], [common], [Carpeta por defecto], [bin_t], [bin], [Carpeta de binarios], [boot_t], [boot], [Carpeta de boot], [device_t], [dev], [Carpeta de dispositivos], [etc_t], [etc], [Carpeta de configuración], [home_root_t], [home], [Carpeta raíz de home], [lib_t], [lib], [Carpeta de librerías], [lost_found_t], [lost+found], [Carpeta de archivos eliminados], [mnt_t], [mnt], [Carpeta montada], [proc_t], [proc], [Carpeta de procesos], [admin_home_t], [root], [Carpeta de home del usuario root], [var_run_t], [run], [Carpeta de archivos de ejecución], [sysfs_t], [sys], [Carpeta de información kernel y dispositivos], [tmp_t], [tmp], [Carpeta de archivos temporales], [usr_t], [usr], [Carpeta de archivos de binarios y similares de solo lectura], [var_t], [var], [Carpeta de archivos de datos variables],
+)
 
 == Selinux Policies
 Las politicas se guardan en XML en el directorio
@@ -151,31 +219,31 @@ semodule -B
 ==== Grano Grueso
 #code(
   lang: "bash", ```bash
-                          # al reiniciar el sistema reetiqueta el sistema de archivos si selinux detecta este archivo
-                          touch /.autorelabel
-                          ```,
+                                                                                                                                    # al reiniciar el sistema reetiqueta el sistema de archivos si selinux detecta este archivo
+                                                                                                                                    touch /.autorelabel
+                                                                                                                                    ```,
 )
 
 #code(
   lang: "bash", ```bash
-                          # Verifica los contextos de seguridad de los archivos sin realizar cambios.
-                          fixfiles check
+                                                                                                                                    # Verifica los contextos de seguridad de los archivos sin realizar cambios.
+                                                                                                                                    fixfiles check
 
-                          # Restaura el contexto de seguridad de los archivos a sus valores predeterminados.
-                          fixfiles restore
+                                                                                                                                    # Restaura el contexto de seguridad de los archivos a sus valores predeterminados.
+                                                                                                                                    fixfiles restore
 
-                          # Pregunta por la eliminacion de /tmp y reetiqueta todos los archivos del sistema de archivos.
-                          fixfiles relabel
+                                                                                                                                    # Pregunta por la eliminacion de /tmp y reetiqueta todos los archivos del sistema de archivos.
+                                                                                                                                    fixfiles relabel
 
-                          # Verifica que todos los archivos tengan el contexto de seguridad correcto.
-                          fixfiles verify
+                                                                                                                                    # Verifica que todos los archivos tengan el contexto de seguridad correcto.
+                                                                                                                                    fixfiles verify
 
-                          # Reetiqueta todo el sistema
-                          fixfiles -F onboot
+                                                                                                                                    # Reetiqueta todo el sistema
+                                                                                                                                    fixfiles -F onboot
 
-                          # Estos comandos pueden tener como ultimo parametro la carpeta padre o archivo a reetiquetar
-                          fixfiles check [folder|file]
-                          ```,
+                                                                                                                                    # Estos comandos pueden tener como ultimo parametro la carpeta padre o archivo a reetiquetar
+                                                                                                                                    fixfiles check [folder|file]
+                                                                                                                                    ```,
 )
 ==== Grano Fino
 
@@ -185,23 +253,23 @@ chcon
 ```)
 #code(
   lang: "bash", ```bash
-                          # Verifica el contexto de seguridad de un archivo utilizando las reglas de política de SELinux.
-                          matchpathcon
-                          ```,
+                                                                                                                                    # Verifica el contexto de seguridad de un archivo utilizando las reglas de política de SELinux.
+                                                                                                                                    matchpathcon
+                                                                                                                                    ```,
 )
 #code(
   lang: "bash", ```bash
-                          # Restaura el contexto de seguridad predeterminado de un archivo o directorio.
-                          restorecon
-                          ```,
+                                                                                                                                    # Restaura el contexto de seguridad predeterminado de un archivo o directorio.
+                                                                                                                                    restorecon
+                                                                                                                                    ```,
 )
 === Monitorizacion Basica SELinux
 #code(
   lang: "bash", ```bash
-                          # Obtiene el estado actual de cumplimiento de politicas de selinux en el sistema
-                          getenforce
-                          # Ouput: Enforcing|Permissive
-                          ```,
+                                                                                                                                    # Obtiene el estado actual de cumplimiento de politicas de selinux en el sistema
+                                                                                                                                    getenforce
+                                                                                                                                    # Ouput: Enforcing|Permissive
+                                                                                                                                    ```,
 )
 #code(lang: "bash", ```bash
 # Obtiene el estado basico de Selinux en el sistema
@@ -220,34 +288,34 @@ sestatus
 ```)
 #code(
   lang: "bash", ```bash
-                          # Obtiene el estado basico de los componenetes de las politicas de Selinux en el sistema
-                          seinfo
-                          # Ouput:
-                          # Statistics for policy file: /sys/fs/selinux/policy
-                          # Policy Version:             33 (MLS enabled)
-                          # Target Policy:              selinux
-                          # Handle unknown classes:     allow
-                          #   Classes:             134    Permissions:         460
-                          #   Sensitivities:         1    Categories:         1024
-                          #   Types:              5266    Attributes:          264
-                          #   Users:                 8    Roles:                15
-                          #   Booleans:            365    Cond. Expr.:         398
-                          #   Allow:             68070    Neverallow:            0
-                          #   Auditallow:          181    Dontaudit:          8830
-                          #   Type_trans:       284397    Type_change:          94
-                          #   Type_member:          37    Range_trans:        6164
-                          #   Role allow:           40    Role_trans:          419
-                          #   Constraints:          70    Validatetrans:         0
-                          #   MLS Constrain:        72    MLS Val. Tran:         0
-                          #   Permissives:           9    Polcap:                6
-                          #   Defaults:              7    Typebounds:            0
-                          #   Allowxperm:            0    Neverallowxperm:       0
-                          #   Auditallowxperm:       0    Dontauditxperm:        0
-                          #   Ibendportcon:          0    Ibpkeycon:             0
-                          #   Initial SIDs:         27    Fs_use:               35
-                          #   Genfscon:            110    Portcon:             665
-                          #   Netifcon:              0    Nodecon:               0
-                          ```,
+                                                                                                                                    # Obtiene el estado basico de los componenetes de las politicas de Selinux en el sistema
+                                                                                                                                    seinfo
+                                                                                                                                    # Ouput:
+                                                                                                                                    # Statistics for policy file: /sys/fs/selinux/policy
+                                                                                                                                    # Policy Version:             33 (MLS enabled)
+                                                                                                                                    # Target Policy:              selinux
+                                                                                                                                    # Handle unknown classes:     allow
+                                                                                                                                    #   Classes:             134    Permissions:         460
+                                                                                                                                    #   Sensitivities:         1    Categories:         1024
+                                                                                                                                    #   Types:              5266    Attributes:          264
+                                                                                                                                    #   Users:                 8    Roles:                15
+                                                                                                                                    #   Booleans:            365    Cond. Expr.:         398
+                                                                                                                                    #   Allow:             68070    Neverallow:            0
+                                                                                                                                    #   Auditallow:          181    Dontaudit:          8830
+                                                                                                                                    #   Type_trans:       284397    Type_change:          94
+                                                                                                                                    #   Type_member:          37    Range_trans:        6164
+                                                                                                                                    #   Role allow:           40    Role_trans:          419
+                                                                                                                                    #   Constraints:          70    Validatetrans:         0
+                                                                                                                                    #   MLS Constrain:        72    MLS Val. Tran:         0
+                                                                                                                                    #   Permissives:           9    Polcap:                6
+                                                                                                                                    #   Defaults:              7    Typebounds:            0
+                                                                                                                                    #   Allowxperm:            0    Neverallowxperm:       0
+                                                                                                                                    #   Auditallowxperm:       0    Dontauditxperm:        0
+                                                                                                                                    #   Ibendportcon:          0    Ibpkeycon:             0
+                                                                                                                                    #   Initial SIDs:         27    Fs_use:               35
+                                                                                                                                    #   Genfscon:            110    Portcon:             665
+                                                                                                                                    #   Netifcon:              0    Nodecon:               0
+                                                                                                                                    ```,
 )
 === Obtencion de logs de SELinux
 @SEL
@@ -255,24 +323,24 @@ setroubleshootd es el proceso que se encarga de gestionar los errores y
 recomendaciones al usuario de selinux @Man-setroubleshootd
 #code(
   lang: "bash", ```bash
-                          # Obtiene los logs relacionados con intentos de accesos no autorizados de recursos
-                          journalctl -e -u setroubleshootd
-                          ```,
+                                                                                                                                    # Obtiene los logs relacionados con intentos de accesos no autorizados de recursos
+                                                                                                                                    journalctl -e -u setroubleshootd
+                                                                                                                                    ```,
 )
 #code(
   lang: "bash", ```bash
-                          # Obtiene los logs relacionados con intentos de accesos no autorizados de recursos sis usar comando de systemd
-                          cat /var/log/audit/audit.log
-                          ```,
+                                                                                                                                    # Obtiene los logs relacionados con intentos de accesos no autorizados de recursos sis usar comando de systemd
+                                                                                                                                    cat /var/log/audit/audit.log
+                                                                                                                                    ```,
 )
 #code(
   lang: "bash", ```bash
-                          # Obtiene los ultimos errores lanzados por selinux
-                          ausearch -m avc
-                          # En concreto maneja la salida de proceso de auditoria que es la categoria en la que esta SELinux
-                          ```,
+                                                                                                                                    # Obtiene los ultimos errores lanzados por selinux
+                                                                                                                                    ausearch -m avc
+                                                                                                                                    # En concreto maneja la salida de proceso de auditoria que es la categoria en la que esta SELinux
+                                                                                                                                    ```,
 )
-=== Lectura de #glspl("Label")
+=== Lectura de #glspl("Label") <visualizacion-commandos>
 #code(lang: "bash", ```bash
 # Obtiene las etiquetas del usuario
 id -Z
@@ -281,34 +349,39 @@ id -Z
 ```)
 #code(
   lang: "bash", ```bash
-                          # Obtiene las etiquetas de los archivos
-                          ls -Z
-                          # Output:
-                          # unconfined_u:object_r:admin_home_t:s0 disk  unconfined_u:object_r:admin_home_t:s0 podman    unconfined_u:object_r:admin_home_t:s0 test-secret.asc
-                          # unconfined_u:object_r:admin_home_t:s0 mnt   unconfined_u:object_r:admin_home_t:s0 test.asc
-                          ls -lZ
-                          # Output:
-                          # total 8
-                          # drwxr-xr-x. 3 root root unconfined_u:object_r:admin_home_t:s0   89 Nov 17 21:38 disk
-                          # drwxr-xr-x. 2 root root unconfined_u:object_r:admin_home_t:s0    6 Nov 24 02:25 mnt
-                          # drwxr-xr-x. 3 root root unconfined_u:object_r:admin_home_t:s0   19 Nov 17 21:40 podman
-                          # -rw-r--r--. 1 root root unconfined_u:object_r:admin_home_t:s0 1745 Nov 23 17:54 test.asc
-                          # -rw-r--r--. 1 root root unconfined_u:object_r:admin_home_t:s0 3779 Nov 23 17:54 test-secret.asc
+                                                                                                                                    # Obtiene las etiquetas de los archivos
+                                                                                                                                    ls -Z
+                                                                                                                                    # Output:
+                                                                                                                                    # unconfined_u:object_r:admin_home_t:s0 disk  unconfined_u:object_r:admin_home_t:s0 podman    unconfined_u:object_r:admin_home_t:s0 test-secret.asc
+                                                                                                                                    # unconfined_u:object_r:admin_home_t:s0 mnt   unconfined_u:object_r:admin_home_t:s0 test.asc
+                                                                                                                                    ls -lZ
+                                                                                                                                    # Output:
+                                                                                                                                    # total 8
+                                                                                                                                    # drwxr-xr-x. 3 root root unconfined_u:object_r:admin_home_t:s0   89 Nov 17 21:38 disk
+                                                                                                                                    # drwxr-xr-x. 2 root root unconfined_u:object_r:admin_home_t:s0    6 Nov 24 02:25 mnt
+                                                                                                                                    # drwxr-xr-x. 3 root root unconfined_u:object_r:admin_home_t:s0   19 Nov 17 21:40 podman
+                                                                                                                                    # -rw-r--r--. 1 root root unconfined_u:object_r:admin_home_t:s0 1745 Nov 23 17:54 test.asc
+                                                                                                                                    # -rw-r--r--. 1 root root unconfined_u:object_r:admin_home_t:s0 3779 Nov 23 17:54 test-secret.asc
 
-                          ```,
+                                                                                                                                    ```,
 )
 #code(
   lang: "bash", ```bash
-                          # Obtiene las etiquetas de procesos
-                          ps -Z
-                          # Ouput:
-                          # LABEL                               PID TTY          TIME CMD
-                          # unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 5937 pts/1 00:00:00 bash
-                          # unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 6099 pts/1 00:00:00 ps
-                          ```,
+                                                                                                                                    # Lista los atributos de un proceso
+                                                                                                                                    ls /proc/$PID/attr
+                                                                                                                                    # Ouput:
+                                                                                                                                    # current  exec  fscreate  keycreate  prev  sockcreate
+
+                                                                                                                                    # Obtiene las etiquetas de procesos
+                                                                                                                                    ps -Z
+                                                                                                                                    # Ouput:
+                                                                                                                                    # LABEL                               PID TTY          TIME CMD
+                                                                                                                                    # unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 5937 pts/1 00:00:00 bash
+                                                                                                                                    # unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 6099 pts/1 00:00:00 ps
+                                                                                                                                    ```,
 )
 
-== Herramientas auxiliares
+== Herramientas complementarias
 === Cockpit
 Cockpit @Tools-cockpit es una interfaz grafica para servidores, en ella podemos
 ver diferentes aspectos de un servidor, en este caso las politicas de @SEL que
@@ -325,4 +398,4 @@ formas de permitir ademas de un boton para implementarlas con un solo click
 #pagebreak()
 = Glosario
 #print-glossary(entry-list)
-#bibliography("references.yml")
+#bibliography("references.yml", full: true)

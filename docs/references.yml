@@ -45,6 +45,8 @@ Selinux-for-kids:
 Selinux-administration-book:
     type: Book
     title: SELinux System Administration v3
+    url:
+      value: "https://public.jdstone1.com/books_and_magazines/Computer_Books/Operating_Systems/SELinux%20System%20Administration%20(3rd%20ed).pdf"
     author: Sven Vermeulen
     page-total: 469
     date: 2020-11-1
